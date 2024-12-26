@@ -1,1 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Converter</title>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --hover: #cc0000;
+            --background: #f0f2f5;
+            --card: #ffffff;
+            --text: #333333;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .container {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+            transition: all 0.5s ease;
+            max-width: 90%;
+            width: 600px;
+        }
+
+        .container:hover {
+            transform: translateZ(20px);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: var(--text);
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transform: translateZ(30px);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-container {
+            position: relative;
+            margin: 20px 0;
+            transform-style: preserve-3d;
+        }
+
+        #youtube-url {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+            transform: translateZ(10px);
+        }
+
+        #youtube-url:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(255,0,0,0.1);
+            transform: translateZ(15px);
+        }
+
+        #convert-btn {
+            background: var(--primary);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateZ(20px);
+            box-shadow: 0 5px 15px rgba(255,0,0,0.2);
+        }
+
+        #convert-btn:hover {
+            background: var(--hover);
+            transform: translateZ(25px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(255,0,0,0.3);
+        }
+
+        #convert-btn:active {
+            transform: translateZ(15px) scale(0.98);
+        }
+
+        .loader {
+            display: none;
+            margin: 30px auto;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            animation: spin 1s linear infinite, float 2s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateZ(20px); }
+            50% { transform: translateZ(30px); }
+        }
+
+        .download-btn {
+            display: none;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 12px;
+            margin-top: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            transform: translateZ(20px);
+            box-shadow: 0 5px 15px rgba(76,175,80,0.2);
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateZ(25px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(76,175,80,0.3);
+        }
+
+        .error {
+            color: var(--primary);
+            margin-top: 20px;
+            display: none;
+            font-weight: 500;
+            transform: translateZ(15px);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Glass effect elements */
+        .glass-effect {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: linear-gradient(
+                45deg,
+                rgba(255,255,255,0.1),
+                rgba(255,255,255,0.05)
+            );
+            pointer-events: none;
+            transform: translateZ(5px);
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            #convert-btn, .download-btn {
+                padding: 12px 30px;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1a1a1a;
+                --card: #2d2d2d;
+                --text: #ffffff;
+            }
+
+            #youtube-url {
+                background: rgba(255,255,255,0.05);
+                color: white;
+                border-color: #404040;
+            }
+
+            .loader {
+                border-color: #404040;
+                border-top-color: var(--primary);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-effect"></div>
+        <h1>YouTube to MP3</h1>
+        <div class="input-container">
+            <input type="text" id="youtube-url" placeholder="Paste YouTube URL here">
+        </div>
+        <button id="convert-btn" onclick="convertVideo()">Convert to MP3</button>
+        <div class="loader" id="loader"></div>
+        <div class="error" id="error-message"></div>
+        <a href="#" class="download-btn" id="download-btn">Download MP3</a>
+    </div>
+
+    <script>
+        function convertVideo() {
+            const url = document.getElementById('youtube-url').value;
+            const loader = document.getElementById('loader');
+            const downloadBtn = document.getElementById('download-btn');
+            const errorMessage = document.getElementById('error-message');
+            const convertBtn = document.getElementById('convert-btn');
+
+            if (!url) {
+                errorMessage.textContent = "Please enter a YouTube URL";
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            loader.style.display = 'block';
+            downloadBtn.style.display = 'none';
+            errorMessage.style.display = 'none';
+            convertBtn.disabled = true;
+
+            fetch('/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                loader.style.display = 'none';
+                downloadBtn.style.display = 'inline-block';
+                downloadBtn.href = data.download_url;
+                convertBtn.disabled = false;
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                errorMessage.textContent = error.message || "An error occurred during conversion";
+                errorMessage.style.display = 'block';
+                convertBtn.disabled = false;
+            });
+        }
+
+        // Add 3D effect on mouse move
+        document.addEventListener('mousemove', function(e) {
+            const container = document.querySelector('.container');
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            container.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg) translateZ(20px)`;
+        });
+
+        // Reset position when mouse leaves
+        document.addEventListener('mouseleave', function() {
+            const container = document.querySelector('.container');
+            container.style.transform = 'rotateY(0) rotateX(0) translateZ(20px)';
+        });
+    </script>
+</body>
+</html>
